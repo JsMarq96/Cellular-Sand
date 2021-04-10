@@ -12,6 +12,7 @@
 struct sShader {
     unsigned int ID;
 
+    sShader() {};
     sShader(const char* vertex_shader, const char* fragment_shader);
 
     void activate();

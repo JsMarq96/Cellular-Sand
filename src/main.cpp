@@ -4,27 +4,14 @@
 
 #include "shader.h"
 #include "input_layer.h"
+#include "cellular_automata.h"
+#include "renderer.h"
 
 #define WIN_WIDTH	640
 #define WIN_HEIGHT	480
 #define WIN_NAME	"Test"
 
-const char* vertex_shader = " \
-	#version 330 core \n\
-	layout(location = 0) in vec3 a_pos; \n\
-	void main() { \n\
-		gl_Position = vec4(a_pos, 1.0); \n\
-	\n} \
-";
 
-const char* fragment_shader = " \
-	#version 330 core \n\
-	layout(location = 0) out vec4 FragColor; \n\
-	uniform vec4 u_color; \n\
-	void main() { \n\
-	    FragColor = u_color; \n\
-	\n} \
-";
 
 void temp_error_callback(int error_code, const char* descr) {
 	std::cout << "GLFW Error: " << error_code << " " << descr << std::endl;
@@ -100,26 +87,11 @@ void cursor_enter_callback(GLFWwindow *window, int entered) {
 void draw_loop(GLFWwindow *window) {
 	glfwMakeContextCurrent(window);
 
-	sShader demo_shader(vertex_shader, fragment_shader);
-	const float triangle_color[4] = {1.0f, 1.0f, 0.0f, 1.0f};
-	const float clip_vertex[] = {
-		-1.0f, -1.0f, 0.0f,
-		1.0f, -1.0f, 0.0f,
-		0.0f,  1.0f, 0.0f,
-	};
+	sRenderer renderer;
 
-	// Send teh vertex to the GPU via Vertex Buffer Objects
-	unsigned int vbo, vao;
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(1, &vbo);
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(clip_vertex), clip_vertex, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) 0);
-	glEnableVertexAttribArray(0);
-
-	glBindVertexArray(0);
+	renderer.prepare_shaders();
+	renderer.config_renderer(100,
+							 100);
 
 	double prev_frame_time = glfwGetTime();
 	sInputLayer *input_state = get_game_input_instance();
@@ -135,7 +107,7 @@ void draw_loop(GLFWwindow *window) {
 
 		// OpenGL stuff
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glClearColor(0.5f, 0.0f, 0.5f, 1.0f);
+		glClearColor(0.f, 0.0f, 0.0f, 1.0f);
 
 		double curr_frame_time = glfwGetTime();
 		double elapsed_time = curr_frame_time - prev_frame_time;
@@ -147,15 +119,13 @@ void draw_loop(GLFWwindow *window) {
 		input_state->mouse_pos_x = temp_mouse_x;
 		input_state->mouse_pos_y = temp_mouse_y;
 
-		demo_shader.activate();
-		demo_shader.set_uniform_vector("u_color", triangle_color);
-
-		glBindVertexArray(vbo);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		renderer.render_frame(NULL);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+
+	renderer.cleanup();
 }
 
 int main() {
@@ -173,13 +143,13 @@ int main() {
 	glfwSetCursorEnterCallback(window, cursor_enter_callback);
 
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1);
+	//glfwSwapInterval(1);
 
 	std::cout << "test" << std::endl;
 	if (!window) {
 		std::cout << "Error, could not create window" << std::endl; 
 	} else {
-		if (gl3wInit()) {
+		if (!gl3wInit()) {
 			draw_loop(window);
 		} else {
 			std::cout << "Cannot init gl3w" << std::endl;
