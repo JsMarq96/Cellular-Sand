@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.13)
 project(GL_GLFW_TEMPLATE)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ".")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "bin")
+
+set(CMAKE_CXX_FLAGS "-g -Wall")
+
 file(GLOB CPP_SOURCES "src/*.cpp")
 file(GLOB C_SOURCES "src/*.c")
 set(includes_dir "includes/")
